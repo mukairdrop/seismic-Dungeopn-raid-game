@@ -1,20 +1,14 @@
-import React from "react";
-
 export const metadata = {
 
   title: "Dungeon Raid",
 
   description:
-    "Seismic Dungeon Game"
+    "Seismic Dungeon Game",
 };
 
 export default function RootLayout({
 
   children,
-
-}: {
-
-  children: React.ReactNode;
 
 }) {
 
