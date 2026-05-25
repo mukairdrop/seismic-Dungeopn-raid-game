@@ -41,7 +41,7 @@ export default function Home() {
       ) return;
 
       if(
-        !(window as any).ethereum
+        !window.ethereum
       ) {
 
         alert(
@@ -52,9 +52,7 @@ export default function Home() {
       }
 
       const accounts =
-        await (
-          window as any
-        ).ethereum.request({
+        await window.ethereum.request({
 
           method:
             "eth_requestAccounts"
@@ -69,19 +67,16 @@ export default function Home() {
   }
 
   async function execute(
-    method: string
+    method
   ) {
 
     try {
 
       setLoading(true);
 
-      const ethereum =
-        (window as any).ethereum;
-
       const provider =
         new ethers.BrowserProvider(
-          ethereum
+          window.ethereum
         );
 
       const signer =
