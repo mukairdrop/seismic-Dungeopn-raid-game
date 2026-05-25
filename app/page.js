@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 
 const contractAddress =
-  "0x293f3A4Ec886314e88DEFc2893794f2786Bcdf4a";
+  "0x138ab9497c86ff7E0801b4514637595eeC73F869";
 
 const abi = [
 
@@ -12,58 +12,79 @@ const abi = [
 
   "function openChest() external",
 
-  "function bossRaid() external"
+  "function bossRaid() external",
+
+  "function healPlayer() external",
+
+  "function getPlayer(address) view returns(uint256,uint256,uint256,uint256,uint256)"
 ];
 
 export default function Home() {
 
-  const [mounted, setMounted] =
-    useState(false);
-
   const [wallet, setWallet] =
     useState("");
+
+  const [player, setPlayer] =
+    useState(null);
 
   const [loading, setLoading] =
     useState(false);
 
-  useEffect(() => {
-
-    setMounted(true);
-
-  }, []);
-
   async function connectWallet() {
 
-    try {
+    const accounts =
+      await window.ethereum.request({
 
-      if(
-        typeof window === "undefined"
-      ) return;
+        method:
+          "eth_requestAccounts"
+      });
 
-      if(
-        !window.ethereum
-      ) {
+    setWallet(accounts[0]);
 
-        alert(
-          "Install Rabby Wallet"
-        );
+    loadPlayer(accounts[0]);
+  }
 
-        return;
-      }
+  async function loadPlayer(
+    address
+  ) {
 
-      const accounts =
-        await window.ethereum.request({
+    const provider =
+      new ethers.BrowserProvider(
+        window.ethereum
+      );
 
-          method:
-            "eth_requestAccounts"
-        });
+    const contract =
+      new ethers.Contract(
 
-      setWallet(accounts[0]);
+        contractAddress,
 
-    } catch(err) {
+        abi,
 
-      console.log(err);
-    }
+        provider
+      );
+
+    const data =
+      await contract.getPlayer(
+        address
+      );
+
+    setPlayer({
+
+      xp:
+        Number(data[0]),
+
+      gold:
+        Number(data[1]),
+
+      level:
+        Number(data[2]),
+
+      health:
+        Number(data[3]),
+
+      bossKills:
+        Number(data[4]),
+    });
   }
 
   async function execute(
@@ -97,17 +118,11 @@ export default function Home() {
 
       await tx.wait();
 
-      alert(
-        "Transaction Success"
-      );
+      await loadPlayer(wallet);
 
     } catch(err) {
 
       console.log(err);
-
-      alert(
-        "Transaction Failed"
-      );
 
     } finally {
 
@@ -115,103 +130,170 @@ export default function Home() {
     }
   }
 
-  if(!mounted) {
-
-    return null;
-  }
-
   return (
 
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-6">
+    <main className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white p-8">
 
-      <h1 className="text-5xl font-bold">
+      <div className="max-w-4xl mx-auto">
 
-        Dungeon Raid
+        <h1 className="text-6xl font-bold text-center mb-8">
 
-      </h1>
+          ⚔ Dungeon Raid
 
-      <button
+        </h1>
 
-        onClick={connectWallet}
+        <div className="flex justify-center mb-8">
 
-        className="bg-blue-600 px-6 py-3 rounded-xl"
+          <button
 
-      >
+            onClick={connectWallet}
+
+            className="bg-blue-600 px-6 py-3 rounded-xl text-lg"
+
+          >
+
+            {
+
+              wallet
+
+              ?
+
+              wallet.slice(0,6)
+              +
+              "..."
+              +
+              wallet.slice(-4)
+
+              :
+
+              "Connect Wallet"
+            }
+
+          </button>
+
+        </div>
 
         {
 
-          wallet
+          player && (
 
-          ?
+            <div className="grid grid-cols-2 gap-4 mb-8">
 
-          wallet.slice(0,6)
-          +
-          "..."
-          +
-          wallet.slice(-4)
+              <div className="bg-gray-800 p-6 rounded-2xl">
 
-          :
+                <h2 className="text-2xl mb-4">
 
-          "Connect Wallet"
+                  Player Stats
+
+                </h2>
+
+                <p>XP: {player.xp}</p>
+
+                <p>Gold: {player.gold}</p>
+
+                <p>Level: {player.level}</p>
+
+                <p>Health: {player.health}</p>
+
+                <p>Boss Kills: {player.bossKills}</p>
+
+              </div>
+
+              <div className="bg-gray-800 p-6 rounded-2xl">
+
+                <h2 className="text-2xl mb-4">
+
+                  Inventory
+
+                </h2>
+
+                <p>🗡 Sword</p>
+
+                <p>🛡 Shield</p>
+
+                <p>💎 Rare Gem</p>
+
+              </div>
+
+            </div>
+          )
         }
 
-      </button>
+        <div className="grid grid-cols-2 gap-4">
 
-      <div className="flex flex-col gap-4 w-64">
+          <button
 
-        <button
+            disabled={loading}
 
-          disabled={loading}
+            onClick={() =>
+              execute(
+                "exploreDungeon"
+              )
+            }
 
-          onClick={() =>
-            execute(
-              "exploreDungeon"
-            )
-          }
+            className="bg-green-700 p-6 rounded-2xl text-xl"
 
-          className="bg-green-600 py-3 rounded-xl"
+          >
 
-        >
+            Explore Dungeon
 
-          Explore Dungeon
+          </button>
 
-        </button>
+          <button
 
-        <button
+            disabled={loading}
 
-          disabled={loading}
+            onClick={() =>
+              execute(
+                "openChest"
+              )
+            }
 
-          onClick={() =>
-            execute(
-              "openChest"
-            )
-          }
+            className="bg-yellow-700 p-6 rounded-2xl text-xl"
 
-          className="bg-yellow-600 py-3 rounded-xl"
+          >
 
-        >
+            Open Chest
 
-          Open Chest
+          </button>
 
-        </button>
+          <button
 
-        <button
+            disabled={loading}
 
-          disabled={loading}
+            onClick={() =>
+              execute(
+                "bossRaid"
+              )
+            }
 
-          onClick={() =>
-            execute(
-              "bossRaid"
-            )
-          }
+            className="bg-red-700 p-6 rounded-2xl text-xl"
 
-          className="bg-red-600 py-3 rounded-xl"
+          >
 
-        >
+            Boss Raid
 
-          Boss Raid
+          </button>
 
-        </button>
+          <button
+
+            disabled={loading}
+
+            onClick={() =>
+              execute(
+                "healPlayer"
+              )
+            }
+
+            className="bg-purple-700 p-6 rounded-2xl text-xl"
+
+          >
+
+            Heal Player
+
+          </button>
+
+        </div>
 
       </div>
 
