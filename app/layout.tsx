@@ -1,3 +1,5 @@
+import React from "react";
+
 export const metadata = {
 
   title: "Dungeon Raid",
@@ -8,11 +10,11 @@ export const metadata = {
 
 export default function RootLayout({
 
-  children
+  children,
 
 }: {
 
-  children: React.ReactNode
+  children: React.ReactNode;
 
 }) {
 
