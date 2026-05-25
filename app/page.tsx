@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 
 const contractAddress =
@@ -12,12 +12,13 @@ const abi = [
 
   "function openChest() external",
 
-  "function bossRaid() external",
-
-  "function getPlayer(address) view returns(uint256 xp,uint256 gold,uint256 level,uint256 bossKills)"
+  "function bossRaid() external"
 ];
 
 export default function Home() {
+
+  const [mounted, setMounted] =
+    useState(false);
 
   const [wallet, setWallet] =
     useState("");
@@ -25,23 +26,46 @@ export default function Home() {
   const [loading, setLoading] =
     useState(false);
 
+  useEffect(() => {
+
+    setMounted(true);
+
+  }, []);
+
   async function connectWallet() {
 
-    if(!window.ethereum) {
+    try {
 
-      alert("Install Rabby");
+      if(
+        typeof window === "undefined"
+      ) return;
 
-      return;
+      if(
+        !(window as any).ethereum
+      ) {
+
+        alert(
+          "Install Rabby Wallet"
+        );
+
+        return;
+      }
+
+      const accounts =
+        await (
+          window as any
+        ).ethereum.request({
+
+          method:
+            "eth_requestAccounts"
+        });
+
+      setWallet(accounts[0]);
+
+    } catch(err) {
+
+      console.log(err);
     }
-
-    const accounts =
-      await window.ethereum.request({
-
-        method:
-          "eth_requestAccounts"
-      });
-
-    setWallet(accounts[0]);
   }
 
   async function execute(
@@ -52,9 +76,12 @@ export default function Home() {
 
       setLoading(true);
 
+      const ethereum =
+        (window as any).ethereum;
+
       const provider =
         new ethers.BrowserProvider(
-          window.ethereum
+          ethereum
         );
 
       const signer =
@@ -76,7 +103,7 @@ export default function Home() {
       await tx.wait();
 
       alert(
-        "TX SUCCESS"
+        "Transaction Success"
       );
 
     } catch(err) {
@@ -84,13 +111,18 @@ export default function Home() {
       console.log(err);
 
       alert(
-        "TX FAILED"
+        "Transaction Failed"
       );
 
     } finally {
 
       setLoading(false);
     }
+  }
+
+  if(!mounted) {
+
+    return null;
   }
 
   return (
@@ -103,28 +135,32 @@ export default function Home() {
 
       </h1>
 
-      {
+      <button
 
-        wallet ? (
+        onClick={connectWallet}
 
-          <p>
-            {wallet}
-          </p>
+        className="bg-blue-600 px-6 py-3 rounded-xl"
 
-        ) : (
+      >
 
-          <button
+        {
 
-            onClick={connectWallet}
+          wallet
 
-            className="bg-blue-600 px-6 py-3 rounded-xl"
-          >
+          ?
 
-            Connect Wallet
+          wallet.slice(0,6)
+          +
+          "..."
+          +
+          wallet.slice(-4)
 
-          </button>
-        )
-      }
+          :
+
+          "Connect Wallet"
+        }
+
+      </button>
 
       <div className="flex flex-col gap-4 w-64">
 
@@ -139,6 +175,7 @@ export default function Home() {
           }
 
           className="bg-green-600 py-3 rounded-xl"
+
         >
 
           Explore Dungeon
@@ -156,6 +193,7 @@ export default function Home() {
           }
 
           className="bg-yellow-600 py-3 rounded-xl"
+
         >
 
           Open Chest
@@ -173,6 +211,7 @@ export default function Home() {
           }
 
           className="bg-red-600 py-3 rounded-xl"
+
         >
 
           Boss Raid
