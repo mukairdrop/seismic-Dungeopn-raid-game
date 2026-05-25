@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ethers } from "ethers";
 
 const contractAddress =
-  "PASTE_YOUR_CONTRACT_ADDRESS";
+  "0x293f3A4Ec886314e88DEFc2893794f2786Bcdf4a";
 
 const abi = [
 
